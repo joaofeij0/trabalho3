@@ -52,7 +52,7 @@ def matriz_perspectiva(fov, aspecto, near, far):
     return m
 
 def look_at(posicao, alvo, up):
-    # Esta é a nossa Matriz de View.
+    # Esta é a nossa matriz de view.
     # Ela monta a base ortogonal da câmera calculando os eixos X, Y e Z no mundo
     # e depois aplica a translação inversa para posicionar a cena em volta dela.
     z = (posicao - alvo); z /= np.linalg.norm(z)  # Vetor de direção (frente invertida)
@@ -117,7 +117,7 @@ def gerar_cone(raio=0.5, altura=1.0, lados=20):
 # 3. SHADERS E CLASSES
 # ==========================================================
 
-# Vertex Shader: Aplica o pipeline completo de transformações (Model -> View -> Projection)
+# Vertex Shader: aplica o pipeline completo de transformações 
 # e passa a posição e a normal do objeto para o fragment shader.
 vertex_code = """
 #version 330
@@ -132,7 +132,7 @@ void main() {
     gl_Position = proj * view * model * vec4(pos, 1.0); // Coordenada final de tela
 }"""
 
-# Fragment Shader: Implementa a iluminação (Ambiente + Difusa - Modelo Lambertiano).
+# Fragment Shader: implementa a iluminação ambiente + difusa 
 fragment_code = """
 #version 330
 in vec3 FragNorm, FragPos;
@@ -154,7 +154,7 @@ void main() {
 }"""
 
 class Camera:
-    # Classe criada para guardar a posição, orientação e estado da câmera FPS.
+    # Classe para guardar a posição, orientação e estado da câmera FPS.
     def __init__(self):
         self.pos = np.array([0.0, 1.5, 10.0], dtype=np.float32)
         self.frente = np.array([0.0, 0.0, -1.0])
@@ -162,7 +162,7 @@ class Camera:
         self.colisao = True
 
     def update(self):
-        # Recalcula o vetor para onde a câmera está olhando com base nos ângulos Pitch e Yaw.
+        # Recalcula o vetor para onde a câmera está olhando com base nos ângulos pitch e yaw.
         fx = math.cos(math.radians(self.yaw)) * math.cos(math.radians(self.pitch))
         fy = math.sin(math.radians(self.pitch))
         fz = math.sin(math.radians(self.yaw)) * math.cos(math.radians(self.pitch))
@@ -171,11 +171,11 @@ class Camera:
 
 class Objeto:
     # Representa qualquer forma 3D que vai ser desenhada na tela.
-    # Cuida do envio dos dados para a GPU  e da renderização.
+    # Cuida do envio de dados para a GPU  e da renderização.
     def __init__(self, tipo, cor, pos=(0,0,0), esc=(1,1,1)):
         self.pos, self.cor, self.esc = np.array(pos, dtype=np.float32), cor, np.array(esc)
         
-        # Seleciona o gerador correto de acordo com a primitiva informada
+        # Seleciona o gerador de acordo com a primitiva informada
         if tipo == "cubo": v, n = gerar_cubo()
         elif tipo == "esfera": v, n = gerar_esfera()
         elif tipo == "cilindro": v, n = gerar_cilindro()
@@ -184,7 +184,6 @@ class Objeto:
         
         self.num = len(v) // 3
         
-        # Configuro o VAO para guardar o estado dos ponteiros de atributos
         self.vao = glGenVertexArrays(1)
         glBindVertexArray(self.vao)
         
@@ -201,14 +200,14 @@ class Objeto:
         glEnableVertexAttribArray(1)
 
     def desenhar(self, prog):
-        # Para desenhar, montamos a matriz Model aplicando Translação e Escala (Model = T * S)
+        # Para desenhar, montamos a matriz Model aplicando translação e escala (Model = T * S)
         m = np.dot(matriz_translacao(*self.pos), matriz_escala(*self.esc))
         
         # Passa a matriz do objeto e sua cor para os uniforms do shader
         glUniformMatrix4fv(glGetUniformLocation(prog, "model"), 1, GL_FALSE, m)
         glUniform3fv(glGetUniformLocation(prog, "objColor"), 1, self.cor)
         
-        # Manda o OpenGL desenhar os triângulos armazenados no VAO
+        # Pede pro OpenGL desenhar os triângulos armazenados no VAO
         glBindVertexArray(self.vao)
         glDrawArrays(GL_TRIANGLES, 0, self.num)
 
@@ -235,14 +234,13 @@ def testar_colisao(p_nova):
 def setup():
     # Esta função roda uma vez só ao iniciar a aplicação.
     global shader, objs
-    glEnable(GL_DEPTH_TEST) # Ativo o Z-Buffer para o openGL resolver a visibilidade de superfícies
+    glEnable(GL_DEPTH_TEST) 
     
     # Compila os shaders e cria o Shader Program
     vs = glCreateShader(GL_VERTEX_SHADER); glShaderSource(vs, vertex_code); glCompileShader(vs)
     fs = glCreateShader(GL_FRAGMENT_SHADER); glShaderSource(fs, fragment_code); glCompileShader(fs)
     shader = glCreateProgram(); glAttachShader(shader, vs); glAttachShader(shader, fs); glLinkProgram(shader)
     
-    # Instancia os 5 objetos exigidos no trabalho espalhados pela cena
     objs.append(Objeto("plano", [0.2, 0.2, 0.2], pos=(0,-1,0), esc=(20,0.1,20))) # Chão
     objs.append(Objeto("cubo", [1,0,0], pos=(-4,0,0)))                          # Vermelho
     objs.append(Objeto("esfera", [0,1,0], pos=(-1.5,0,0)))                       # Verde
@@ -256,9 +254,9 @@ def render():
     glClearColor(0.1, 0.1, 0.15, 1.0)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # Limpa os buffers de cor e de profundidade
     
-    # --- CONTROLES DE NAVEGAÇÃO ---
+    # CONTROLES DE NAVEGAÇÃO
     io = imgui.get_io()
-    if not io.want_capture_keyboard: # Só move a câmera se o usuário não estiver clicando na interface
+    if not io.want_capture_keyboard: 
         vel = 0.08
         np_pos = cam.pos.copy()
         
@@ -277,13 +275,13 @@ def render():
         if imgui.is_key_pressed(imgui.Key.escape):
             params.app_shall_exit = True
 
-    # Botão direito do mouse para olhar em volta
+    # Botão direito do mouse para olhar em volta 
     if imgui.is_mouse_dragging(imgui.MouseButton_.right):
         cam.yaw += io.mouse_delta.x * 0.2
         cam.pitch -= io.mouse_delta.y * 0.2
         cam.update()
 
-    # Recalcula a Projection e a View com base na nova posição/direção da câmera
+    # Recalcula a projection e a view com base na nova posição/direção da câmera
     proj = matriz_perspectiva(45.0, 1280/720, 0.1, 100.0)
     view = look_at(cam.pos, cam.pos + cam.frente, [0,1,0])
     
@@ -305,7 +303,7 @@ def gui():
     _, cam.colisao = imgui.checkbox("Ativar Colisão", cam.colisao)
     imgui.end()
 
-# Configuração e execução do loop principal através do Hello ImGui
+# Configuração e execução do loop principal através do ImGui
 params.callbacks.post_init = setup
 params.callbacks.custom_background = render
 params.callbacks.show_gui = gui
